@@ -298,6 +298,14 @@
           <button onclick="checkNews()">
             <i class="fas fa-search"></i> Check Fact
           </button>
+          <button
+            onclick="startListening()"
+            id="micBtn"
+            title="Speak to search"
+            style="background: linear-gradient(to right, #28a745, #218838)"
+          >
+            <i class="fas fa-microphone"></i>
+          </button>
         </div>
 
         <div class="examples">
@@ -398,6 +406,85 @@
     <script>
       function setQuery(text) {
         document.getElementById("query").value = text;
+      }
+
+      let isListening = false;
+      let abortController = null;
+
+      async function startListening() {
+        const micBtn = document.getElementById("micBtn");
+        const queryInput = document.getElementById("query");
+        const originalIcon = '<i class="fas fa-microphone"></i>';
+
+        // If already listening, stop it
+        if (isListening) {
+          if (abortController) {
+            abortController.abort();
+            abortController = null;
+          }
+          isListening = false;
+          micBtn.innerHTML = originalIcon;
+          micBtn.style.background =
+            "linear-gradient(to right, #28a745, #218838)";
+          queryInput.placeholder =
+            "Enter a claim, news headline, or tweet to verify...";
+          return;
+        }
+
+        // Start listening
+        isListening = true;
+        abortController = new AbortController();
+
+        console.log("Starting listening...");
+        const originalBackground = micBtn.style.background;
+
+        try {
+          // Change button to stop/spinner
+          micBtn.innerHTML = '<i class="fas fa-stop"></i>';
+          micBtn.style.background =
+            "linear-gradient(to right, #dc3545, #c82333)"; // Red for stop
+          queryInput.placeholder =
+            "Listening... Speak now! (Click mic to cancel)";
+
+          const response = await fetch("http://127.0.0.1:8000/listen", {
+            signal: abortController.signal,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log("Received data:", data);
+
+          if (data.text) {
+            queryInput.value = data.text;
+          } else if (data.error) {
+            alert(data.error);
+          } else {
+            // Only alert if we finished normally but got no text
+            if (isListening)
+              alert("Could not hear anything. Please try again.");
+          }
+        } catch (err) {
+          if (err.name === "AbortError") {
+            console.log("Listening cancelled by user");
+          } else {
+            console.error("Error details:", err);
+            alert(
+              "Error connecting to microphone service. Check console for details."
+            );
+          }
+        } finally {
+          // Reset UI
+          isListening = false;
+          abortController = null;
+          micBtn.innerHTML = originalIcon;
+          micBtn.style.background =
+            "linear-gradient(to right, #28a745, #218838)";
+          queryInput.placeholder =
+            "Enter a claim, news headline, or tweet to verify...";
+        }
       }
 
       async function checkNews() {
