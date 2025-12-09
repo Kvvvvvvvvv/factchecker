@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>News Fact Checker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      body {
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+        color: #333;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      
+      header {
+        text-align: center;
+        padding: 30px 0;
+        color: white;
+      }
+      
+      header h1 {
+        font-size: 2.8rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      }
+      
+      header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+      
+      .search-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+      }
+      
+      .input-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      
+      #query {
+        flex: 1;
+        padding: 15px 20px;
+        border: 2px solid #ddd;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        outline: none;
+        transition: all 0.3s;
+      }
+      
+      #query:focus {
+        border-color: #1a2a6c;
+        box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+      }
+      
+      button {
+        background: linear-gradient(to right, #1a2a6c, #b21f1f);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+      
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      button:active {
+        transform: translateY(0);
+      }
+      
+      .examples {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+      }
+      
+      .example-tag {
+        background: #e9ecef;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .example-tag:hover {
+        background: #1a2a6c;
+        color: white;
+      }
+      
+      .status {
+        text-align: center;
+        padding: 20px;
+        font-size: 1.2rem;
+        color: white;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .results-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-top: 20px;
+      }
+      
+      @media (max-width: 900px) {
+        .results-container {
+          grid-template-columns: 1fr;
+        }
+      }
+      
+      .result-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+      
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eee;
+        color: #1a2a6c;
+      }
+      
+      .card-title i {
+        font-size: 1.5rem;
+      }
+      
+      .verdict-display {
+        text-align: center;
+        padding: 30px 20px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .verdict-true {
+        background: linear-gradient(to right, #4caf50, #8bc34a);
+        color: white;
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+      }
+      
+      .verdict-false {
+        background: linear-gradient(to right, #f44336, #e91e63);
+        color: white;
+        box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+      }
+      
+      .verdict-unclear {
+        background: linear-gradient(to right, #ff9800, #ffc107);
+        color: white;
+        box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+      }
+      
+      .verdict-error {
+        background: linear-gradient(to right, #9e9e9e, #607d8b);
+        color: white;
+        box-shadow: 0 5px 15px rgba(158, 158, 158, 0.4);
+      }
+      
+      .report-content {
+        line-height: 1.6;
+        color: #444;
+      }
+      
+      .report-content h3 {
+        margin: 20px 0 10px;
+        color: #1a2a6c;
+      }
+      
+      .report-content ul {
+        padding-left: 20px;
+        margin: 15px 0;
+      }
+      
+      .report-content li {
+        margin-bottom: 10px;
+      }
+      
+      .twitter-feed {
+        margin-top: 20px;
+      }
+      
+      .tweet {
+        background: #f8f9fa;
+        border-left: 4px solid #1da1f2;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 0 8px 8px 0;
+      }
+      
+      .tweet-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      
+      .tweet-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #1da1f2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+      
+      .tweet-username {
+        font-weight: bold;
+        color: #1da1f2;
+      }
+      
+      .tweet-content {
+        margin-bottom: 10px;
+      }
+      
+      .tweet-meta {
+        font-size: 0.85rem;
+        color: #657786;
+      }
+      
+      .hashtag {
+        color: #1da1f2;
+        font-weight: bold;
+      }
+      
+      footer {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 30px 0;
+        margin-top: 30px;
+      }
+      
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><i class="fas fa-check-circle"></i> News Fact Checker</h1>
+        <p>Verify claims and combat misinformation with real-time fact checking</p>
+      </header>
+      
+      <div class="search-container">
+        <div class="input-group">
+          <input
+            type="text"
+            id="query"
+            placeholder="Enter a claim, news headline, or tweet to verify..."
+            size="50"
+          />
+          <button onclick="checkNews()"><i class="fas fa-search"></i> Check Fact</button>
+        </div>
+        
+        <div class="examples">
+          <div class="example-tag" onclick="setQuery('COVID-19 vaccines cause infertility')">COVID Vaccines & Infertility</div>
+          <div class="example-tag" onclick="setQuery('Climate change is a hoax')">Climate Change Hoax</div>
+          <div class="example-tag" onclick="setQuery('#BreakingNews')">Trending Hashtag</div>
+        </div>
+      </div>
+      
+      <div id="status" class="status hidden">
+        <i class="fas fa-spinner fa-spin"></i> Analyzing claim... This may take a moment.
+      </div>
+      
+      <div id="results" class="hidden">
+        <div class="results-container">
+          <div class="result-card">
+            <div class="card-title">
+              <i class="fas fa-file-alt"></i>
+              <h2>Fact Check Results</h2>
+            </div>
+            <div id="verdictDisplay" class="verdict-display"></div>
+            <div id="reportDisplay" class="report-content"></div>
+          </div>
+          
+          <div class="result-card">
+            <div class="card-title">
+              <i class="fab fa-twitter"></i>
+              <h2>Twitter Conversation</h2>
+            </div>
+            <div class="twitter-feed">
+              <div class="tweet">
+                <div class="tweet-header">
+                  <div class="tweet-avatar">T</div>
+                  <div class="tweet-username">@TruthTracker</div>
+                </div>
+                <div class="tweet-content">
+                  Just analyzed: "<span id="tweetClaim"></span>" 
+                  Verdict: <span id="tweetVerdict"></span> 
+                  <span class="hashtag">#FactCheck</span> <span class="hashtag">#Verification</span>
+                </div>
+                <div class="tweet-meta">Just now · Truth Checker App</div>
+              </div>
+              
+              <div class="tweet">
+                <div class="tweet-header">
+                  <div class="tweet-avatar">N</div>
+                  <div class="tweet-username">@NewsWatcher</div>
+                </div>
+                <div class="tweet-content">
+                  Important to verify claims before sharing! 
+                  <span class="hashtag">#MediaLiteracy</span> <span class="hashtag">#FakeNews</span>
+                </div>
+                <div class="tweet-meta">2 minutes ago</div>
+              </div>
+              
+              <div class="tweet">
+                <div class="tweet-header">
+                  <div class="tweet-avatar">F</div>
+                  <div class="tweet-username">@FactFan</div>
+                </div>
+                <div class="tweet-content">
+                  Love this tool! Just checked "<span id="recentClaim"></span>" and found it was 
+                  <span id="recentVerdict"></span>. Thanks for keeping us informed!
+                  <span class="hashtag">#TruthMatters</span>
+                </div>
+                <div class="tweet-meta">5 minutes ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>Truth Checker - Combatting misinformation one fact at a time</p>
+      <p>Made with <i class="fas fa-heart" style="color:#f44336"></i> for a better informed world</p>
+    </footer>
+
+    <script>
+      function setQuery(text) {
+        document.getElementById("query").value = text;
+      }
+      
+      async function checkNews() {
+        const query = document.getElementById("query").value;
+        if (!query) return alert("Please enter a claim to check!");
+        
+        // Show loading state
+        document.getElementById("status").classList.remove("hidden");
+        document.getElementById("results").classList.add("hidden");
+        
+        try {
+          // Use the full backend URL
+          const backendURL = `http://127.0.0.1:1234/result/${encodeURIComponent(query)}`;
+          const response = await fetch(backendURL);
+          const data = await response.json();
+          
+          // Update the UI with results
+          updateResultsUI(data, query);
+        } catch (err) {
+          console.error("Error:", err);
+          document.getElementById("status").classList.add("hidden");
+          alert("An error occurred while checking the fact. Please try again.");
+        }
+      }
+      
+      function updateResultsUI(data, originalQuery) {
+        // Hide loading, show results
+        document.getElementById("status").classList.add("hidden");
+        document.getElementById("results").classList.remove("hidden");
+        
+        // Update verdict display
+        const verdictDisplay = document.getElementById("verdictDisplay");
+        verdictDisplay.className = "verdict-display verdict-" + data.verdict.toLowerCase();
+        verdictDisplay.textContent = data.verdict;
+        
+        // Update report display with better formatting
+        const reportDisplay = document.getElementById("reportDisplay");
+        reportDisplay.innerHTML = formatReport(data.full_report);
+        
+        // Update Twitter section
+        document.getElementById("tweetClaim").textContent = originalQuery;
+        document.getElementById("tweetVerdict").textContent = data.verdict;
+        document.getElementById("recentClaim").textContent = originalQuery;
+        document.getElementById("recentVerdict").textContent = data.verdict.toLowerCase();
+      }
+      
+      function formatReport(reportText) {
+        // Convert report text to HTML with better formatting
+        if (!reportText) return "<p>No details available.</p>";
+        
+        // Split into lines and format
+        const lines = reportText.split('\n');
+        let formatted = '';
+        let inList = false;
+        
+        lines.forEach(line => {
+          line = line.trim();
+          if (!line) return;
+          
+          if (line.startsWith('- ')) {
+            if (!inList) {
+              formatted += '<ul>';
+              inList = true;
+            }
+            formatted += `<li>${line.substring(2)}</li>`;
+          } else {
+            if (inList) {
+              formatted += '</ul>';
+              inList = false;
+            }
+            
+            if (line.startsWith('VERDICT:') || line.startsWith('CONFIDENCE_SCORE:') || 
+                line.startsWith('EVIDENCE:') || line.startsWith('REASONING:') || 
+                line.startsWith('SOURCES:')) {
+              formatted += `<h3>${line}</h3>`;
+            } else if (line.match(/^https?:\/\//)) {
+              formatted += `<p><a href="${line}" target="_blank">${line}</a></p>`;
+            } else {
+              formatted += `<p>${line}</p>`;
+            }
+          }
+        });
+        
+        if (inList) {
+          formatted += '</ul>';
+        }
+        
+        return formatted || '<p>No details available.</p>';
+      }
+      
+      // Allow Enter key to trigger search
+      document.getElementById("query").addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+          checkNews();
+        }
+      });
+    </script>
+  </body>
+</html>
